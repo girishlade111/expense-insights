@@ -18,6 +18,14 @@ interface ExpenseRow {
   notes: string;
 }
 
+interface CategoryStat {
+  name: string;
+  value: number; // total amount
+  count: number; // number of transactions
+}
+
+type HistoryFilter = "all" | "income" | "expense";
+
 const formatCurrency = (value: number) =>
   value.toLocaleString("en-IN", { style: "currency", currency: "INR" });
 
@@ -25,6 +33,8 @@ const Index = () => {
   const [rows, setRows] = useState<ExpenseRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "table">("overview");
+  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>("all");
 
   useEffect(() => {
     const fetchSheet = async () => {
@@ -66,29 +76,48 @@ const Index = () => {
   }, []);
 
   const stats = useMemo(() => {
-    const totalIncome = rows
-      .filter((r) => r.credit.trim() !== "")
-      .reduce((sum, r) => sum + r.amount, 0);
-    const totalExpense = rows
-      .filter((r) => r.debit.trim() !== "")
-      .reduce((sum, r) => sum + r.amount, 0);
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    const amountByCategory = new Map<string, number>();
+    const countByCategory = new Map<string, number>();
+
+    for (const row of rows) {
+      const isIncome = row.credit.trim() !== "";
+      const isExpense = row.debit.trim() !== "";
+
+      if (isIncome) totalIncome += row.amount;
+      if (isExpense) totalExpense += row.amount;
+
+      if (isExpense) {
+        const key = row.category || "Uncategorized";
+        amountByCategory.set(key, (amountByCategory.get(key) ?? 0) + row.amount);
+        countByCategory.set(key, (countByCategory.get(key) ?? 0) + 1);
+      }
+    }
+
+    const categoryData: CategoryStat[] = Array.from(amountByCategory.entries()).map(
+      ([name, value]) => ({
+        name,
+        value,
+        count: countByCategory.get(name) ?? 0,
+      }),
+    );
+
     const balance = totalIncome - totalExpense;
-
-    const byCategory = new Map<string, number>();
-    rows
-      .filter((r) => r.debit.trim() !== "")
-      .forEach((r) => {
-        const key = r.category || "Uncategorized";
-        byCategory.set(key, (byCategory.get(key) ?? 0) + r.amount);
-      });
-
-    const categoryData = Array.from(byCategory.entries()).map(([name, value]) => ({
-      name,
-      value,
-    }));
 
     return { totalIncome, totalExpense, balance, categoryData };
   }, [rows]);
+
+  const filteredRows = useMemo(() => {
+    if (historyFilter === "income") {
+      return rows.filter((r) => r.credit.trim() !== "");
+    }
+    if (historyFilter === "expense") {
+      return rows.filter((r) => r.debit.trim() !== "");
+    }
+    return rows;
+  }, [rows, historyFilter]);
 
   const CATEGORY_COLORS = [
     "hsl(var(--primary))",
@@ -98,6 +127,16 @@ const Index = () => {
     "hsl(330 75% 60%)",
     "hsl(120 70% 55%)",
   ];
+
+  const handleShowIncome = () => {
+    setHistoryFilter("income");
+    setActiveTab("table");
+  };
+
+  const handleShowExpenses = () => {
+    setHistoryFilter("expense");
+    setActiveTab("table");
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -119,15 +158,23 @@ const Index = () => {
           </div>
         </header>
 
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as "overview" | "table")}
+          className="space-y-6"
+        >
           <TabsList className="bg-secondary/60">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="table">Full history</TabsTrigger>
+            <TabsTrigger value="table">Transaction history</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            {/* Summary cards */}
             <section className="grid gap-4 md:grid-cols-3">
-              <Card className="border-border bg-card/80">
+              <Card
+                className="cursor-pointer border-border bg-card/80 transition-colors hover:bg-secondary/60"
+                onClick={handleShowIncome}
+              >
                 <CardHeader>
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total income</CardTitle>
                 </CardHeader>
@@ -135,10 +182,14 @@ const Index = () => {
                   <p className="text-2xl font-semibold tracking-tight">
                     {formatCurrency(stats.totalIncome)}
                   </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Click to view only income transactions.</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-border bg-card/80">
+              <Card
+                className="cursor-pointer border-border bg-card/80 transition-colors hover:bg-secondary/60"
+                onClick={handleShowExpenses}
+              >
                 <CardHeader>
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total expenses</CardTitle>
                 </CardHeader>
@@ -146,6 +197,7 @@ const Index = () => {
                   <p className="text-2xl font-semibold tracking-tight text-destructive">
                     {formatCurrency(stats.totalExpense)}
                   </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Click to view only expense transactions.</p>
                 </CardContent>
               </Card>
 
@@ -160,10 +212,12 @@ const Index = () => {
                   >
                     {formatCurrency(stats.balance)}
                   </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Income minus expenses.</p>
                 </CardContent>
               </Card>
             </section>
 
+            {/* Analytics */}
             <section className="grid gap-4 md:grid-cols-2">
               <Card className="border-border bg-card/80">
                 <CardHeader>
@@ -171,37 +225,65 @@ const Index = () => {
                     Expenses by category
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="h-[280px]">
-                  {stats.categoryData.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No expense data available yet.</p>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={stats.categoryData}
-                          dataKey="value"
-                          nameKey="name"
-                          innerRadius={60}
-                          outerRadius={90}
-                          paddingAngle={3}
+                <CardContent className="space-y-4">
+                  <div className="h-[240px]">
+                    {stats.categoryData.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No expense data available yet.</p>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={stats.categoryData}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius={60}
+                            outerRadius={90}
+                            paddingAngle={3}
+                          >
+                            {stats.categoryData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${entry.name}`}
+                                fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--popover))",
+                              borderColor: "hsl(var(--border))",
+                              borderRadius: 8,
+                            }}
+                            formatter={(value: number, _name, item) => [
+                              formatCurrency(value),
+                              (item?.payload as CategoryStat)?.name,
+                            ]}
+                          />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+
+                  {/* Category cards with transaction counts */}
+                  {stats.categoryData.length > 0 && (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {stats.categoryData.map((cat, index) => (
+                        <div
+                          key={cat.name}
+                          className="flex items-center justify-between rounded-md border border-border/70 bg-secondary/40 px-3 py-2 text-xs"
                         >
-                          {stats.categoryData.map((entry, index) => (
-                            <Cell
-                              key={`cell-${entry.name}`}
-                              fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--popover))",
-                            borderColor: "hsl(var(--border))",
-                            borderRadius: 8,
-                          }}
-                        />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{cat.name}</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {cat.count} transaction{cat.count === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                          <span className="text-xs font-semibold">
+                            {formatCurrency(cat.value)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -255,9 +337,27 @@ const Index = () => {
           <TabsContent value="table">
             <Card className="border-border bg-card/80">
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Full expense history
-                </CardTitle>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Transaction history
+                    </CardTitle>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {historyFilter === "all" && "Showing all transactions from your sheet."}
+                      {historyFilter === "income" && "Showing only income (credit) transactions."}
+                      {historyFilter === "expense" && "Showing only expense (debit) transactions."}
+                    </p>
+                  </div>
+                  {historyFilter !== "all" && (
+                    <button
+                      type="button"
+                      onClick={() => setHistoryFilter("all")}
+                      className="rounded-full border border-border/70 bg-secondary/40 px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary"
+                    >
+                      Clear filter
+                    </button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-[480px]">
@@ -273,7 +373,7 @@ const Index = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map((row, idx) => (
+                      {filteredRows.map((row, idx) => (
                         <tr
                           key={`${row.dateTime}-${idx}`}
                           className="border-b border-border/40 last:border-0 odd:bg-secondary/20"
@@ -291,13 +391,13 @@ const Index = () => {
                         </tr>
                       ))}
 
-                      {rows.length === 0 && !loading && !error && (
+                      {filteredRows.length === 0 && !loading && !error && (
                         <tr>
                           <td
                             colSpan={6}
                             className="px-3 py-6 text-center text-xs text-muted-foreground"
                           >
-                            No rows available yet.
+                            No transactions match this view.
                           </td>
                         </tr>
                       )}
