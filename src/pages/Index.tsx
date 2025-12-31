@@ -140,15 +140,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10">
-        <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8">
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Matte Ledger</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">Matte Ledger</h1>
+            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
               Read-only expense history and analytics, synced directly from your Google Sheet.
             </p>
           </div>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground sm:text-xs">
             <Badge variant="outline" className="border-border bg-secondary/40">
               View-only interface
             </Badge>
@@ -161,28 +161,36 @@ const Index = () => {
         <Tabs
           value={activeTab}
           onValueChange={(value) => setActiveTab(value as "overview" | "table")}
-          className="space-y-6"
+          className="space-y-4 sm:space-y-6"
         >
-          <TabsList className="bg-secondary/60">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="table">Transaction history</TabsTrigger>
+          <TabsList className="flex w-full justify-start overflow-x-auto rounded-xl bg-secondary/60 p-1 text-xs sm:text-sm">
+            <TabsTrigger className="flex-1 min-w-[120px]" value="overview">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger className="flex-1 min-w-[150px]" value="table">
+              Transaction history
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
             {/* Summary cards */}
-            <section className="grid gap-4 md:grid-cols-3">
+            <section className="grid gap-3 sm:gap-4 sm:grid-cols-3">
               <Card
                 className="cursor-pointer border-border bg-card/80 transition-colors hover:bg-secondary/60"
                 onClick={handleShowIncome}
               >
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total income</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+                    Total income
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-semibold tracking-tight">
+                <CardContent className="pt-0">
+                  <p className="text-xl font-semibold tracking-tight sm:text-2xl">
                     {formatCurrency(stats.totalIncome)}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">Click to view only income transactions.</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+                    Tap to view only income transactions.
+                  </p>
                 </CardContent>
               </Card>
 
@@ -190,29 +198,35 @@ const Index = () => {
                 className="cursor-pointer border-border bg-card/80 transition-colors hover:bg-secondary/60"
                 onClick={handleShowExpenses}
               >
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total expenses</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+                    Total expenses
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-semibold tracking-tight text-destructive">
+                <CardContent className="pt-0">
+                  <p className="text-xl font-semibold tracking-tight text-destructive sm:text-2xl">
                     {formatCurrency(stats.totalExpense)}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">Click to view only expense transactions.</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+                    Tap to view only expense transactions.
+                  </p>
                 </CardContent>
               </Card>
 
               <Card className="border-border bg-card/80">
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Balance</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
+                    Balance
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <p
-                    className="text-2xl font-semibold tracking-tight"
+                    className="text-xl font-semibold tracking-tight sm:text-2xl"
                     style={{ color: stats.balance >= 0 ? "hsl(var(--accent))" : "hsl(var(--destructive))" }}
                   >
                     {formatCurrency(stats.balance)}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">Income minus expenses.</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">Income minus expenses.</p>
                 </CardContent>
               </Card>
             </section>
@@ -226,7 +240,7 @@ const Index = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="h-[240px]">
+                  <div className="h-[220px] sm:h-[260px]">
                     {stats.categoryData.length === 0 ? (
                       <p className="text-sm text-muted-foreground">No expense data available yet.</p>
                     ) : (
@@ -258,7 +272,7 @@ const Index = () => {
                               (item?.payload as CategoryStat)?.name,
                             ]}
                           />
-                          <Legend />
+                          <Legend wrapperStyle={{ fontSize: 10 }} />
                         </PieChart>
                       </ResponsiveContainer>
                     )}
@@ -267,18 +281,18 @@ const Index = () => {
                   {/* Category cards with transaction counts */}
                   {stats.categoryData.length > 0 && (
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {stats.categoryData.map((cat, index) => (
+                      {stats.categoryData.map((cat) => (
                         <div
                           key={cat.name}
-                          className="flex items-center justify-between rounded-md border border-border/70 bg-secondary/40 px-3 py-2 text-xs"
+                          className="flex items-center justify-between rounded-md border border-border/70 bg-secondary/40 px-3 py-2 text-[11px] sm:text-xs"
                         >
                           <div className="flex flex-col">
                             <span className="font-medium">{cat.name}</span>
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="text-[10px] text-muted-foreground sm:text-[11px]">
                               {cat.count} transaction{cat.count === 1 ? "" : "s"}
                             </span>
                           </div>
-                          <span className="text-xs font-semibold">
+                          <span className="text-[11px] font-semibold sm:text-xs">
                             {formatCurrency(cat.value)}
                           </span>
                         </div>
@@ -293,23 +307,27 @@ const Index = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">Recent activity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ScrollArea className="h-[260px] pr-4">
+                  <ScrollArea className="h-[260px] sm:h-[280px] pr-3 sm:pr-4">
                     <ul className="space-y-3 text-sm">
                       {rows.slice(0, 8).map((row, idx) => (
                         <li
                           key={`${row.dateTime}-${idx}`}
                           className="flex items-start justify-between rounded-lg border border-border/60 bg-secondary/40 px-3 py-2"
                         >
-                          <div>
-                            <p className="font-medium">{row.debit || row.credit || "Entry"}</p>
-                            <p className="text-xs text-muted-foreground">
+                          <div className="min-w-0 pr-2">
+                            <p className="truncate text-sm font-medium">
+                              {row.debit || row.credit || "Entry"}
+                            </p>
+                            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                               {row.category || "Uncategorized"} • {row.dateTime}
                             </p>
                             {row.notes && (
-                              <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{row.notes}</p>
+                              <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">
+                                {row.notes}
+                              </p>
                             )}
                           </div>
-                          <div className="ml-3 text-right text-sm font-semibold">
+                          <div className="ml-1 text-right text-xs font-semibold sm:text-sm">
                             <span
                               style={{
                                 color:
@@ -337,12 +355,12 @@ const Index = () => {
           <TabsContent value="table">
             <Card className="border-border bg-card/80">
               <CardHeader>
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <CardTitle className="text-sm font-medium text-muted-foreground">
                       Transaction history
                     </CardTitle>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
                       {historyFilter === "all" && "Showing all transactions from your sheet."}
                       {historyFilter === "income" && "Showing only income (credit) transactions."}
                       {historyFilter === "expense" && "Showing only expense (debit) transactions."}
@@ -352,7 +370,7 @@ const Index = () => {
                     <button
                       type="button"
                       onClick={() => setHistoryFilter("all")}
-                      className="rounded-full border border-border/70 bg-secondary/40 px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary"
+                      className="self-start rounded-full border border-border/70 bg-secondary/40 px-3 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-secondary sm:self-auto sm:text-xs"
                     >
                       Clear filter
                     </button>
@@ -360,16 +378,16 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[480px]">
-                  <table className="min-w-full text-left text-sm">
+                <ScrollArea className="h-[380px] sm:h-[460px]">
+                  <table className="min-w-full text-left text-xs sm:text-sm">
                     <thead className="sticky top-0 z-10 bg-background/80 backdrop-blur">
-                      <tr className="border-b border-border/60 text-xs uppercase tracking-wide text-muted-foreground">
-                        <th className="px-3 py-2 font-medium">Date &amp; Time</th>
-                        <th className="px-3 py-2 font-medium">Credit (Income)</th>
-                        <th className="px-3 py-2 font-medium">Debit (Expense)</th>
-                        <th className="px-3 py-2 font-medium">Category</th>
-                        <th className="px-3 py-2 font-medium text-right">Amount</th>
-                        <th className="px-3 py-2 font-medium">Purpose / Notes</th>
+                      <tr className="border-b border-border/60 text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">
+                        <th className="px-2 py-2 sm:px-3">Date &amp; Time</th>
+                        <th className="px-2 py-2 sm:px-3">Credit (Income)</th>
+                        <th className="px-2 py-2 sm:px-3">Debit (Expense)</th>
+                        <th className="px-2 py-2 sm:px-3">Category</th>
+                        <th className="px-2 py-2 text-right sm:px-3">Amount</th>
+                        <th className="px-2 py-2 sm:px-3">Purpose / Notes</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -378,16 +396,24 @@ const Index = () => {
                           key={`${row.dateTime}-${idx}`}
                           className="border-b border-border/40 last:border-0 odd:bg-secondary/20"
                         >
-                          <td className="px-3 py-2 align-top text-xs text-muted-foreground">{row.dateTime}</td>
-                          <td className="px-3 py-2 align-top text-sm">{row.credit || ""}</td>
-                          <td className="px-3 py-2 align-top text-sm">{row.debit || ""}</td>
-                          <td className="px-3 py-2 align-top text-sm text-muted-foreground">
+                          <td className="px-2 py-2 align-top text-[11px] text-muted-foreground sm:px-3 sm:text-xs">
+                            {row.dateTime}
+                          </td>
+                          <td className="px-2 py-2 align-top text-[11px] sm:px-3 sm:text-sm">
+                            {row.credit || ""}
+                          </td>
+                          <td className="px-2 py-2 align-top text-[11px] sm:px-3 sm:text-sm">
+                            {row.debit || ""}
+                          </td>
+                          <td className="px-2 py-2 align-top text-[11px] text-muted-foreground sm:px-3 sm:text-sm">
                             {row.category || "Uncategorized"}
                           </td>
-                          <td className="px-3 py-2 align-top text-right text-sm">
+                          <td className="whitespace-nowrap px-2 py-2 align-top text-right text-[11px] sm:px-3 sm:text-sm">
                             {formatCurrency(row.amount)}
                           </td>
-                          <td className="px-3 py-2 align-top text-sm text-muted-foreground">{row.notes}</td>
+                          <td className="px-2 py-2 align-top text-[11px] text-muted-foreground sm:px-3 sm:text-sm">
+                            {row.notes}
+                          </td>
                         </tr>
                       ))}
 
@@ -410,7 +436,7 @@ const Index = () => {
         </Tabs>
 
         {(loading || error) && (
-          <section className="mt-2 text-xs text-muted-foreground">
+          <section className="mt-1 text-[11px] text-muted-foreground sm:mt-2 sm:text-xs">
             {loading && <p>Loading latest data from Google Sheets • This is a read-only view.</p>}
             {error && <p className="mt-1 text-destructive">{error}</p>}
           </section>
