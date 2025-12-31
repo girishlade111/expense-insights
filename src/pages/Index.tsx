@@ -19,7 +19,7 @@ interface ExpenseRow {
 }
 
 const formatCurrency = (value: number) =>
-  value.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  value.toLocaleString("en-IN", { style: "currency", currency: "INR" });
 
 const Index = () => {
   const [rows, setRows] = useState<ExpenseRow[]>([]);
