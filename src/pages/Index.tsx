@@ -266,11 +266,13 @@ const Index = () => {
                               backgroundColor: "hsl(var(--popover))",
                               borderColor: "hsl(var(--border))",
                               borderRadius: 8,
+                              color: "hsl(var(--foreground))",
                             }}
                             formatter={(value: number, _name, item) => [
                               formatCurrency(value),
                               (item?.payload as CategoryStat)?.name,
                             ]}
+                            wrapperStyle={{ color: "hsl(var(--foreground))" }}
                           />
                           <Legend wrapperStyle={{ fontSize: 10 }} />
                         </PieChart>
