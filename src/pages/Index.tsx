@@ -396,7 +396,7 @@ const Index = () => {
                       {filteredRows.map((row, idx) => (
                         <tr
                           key={`${row.dateTime}-${idx}`}
-                          className="border-b border-border/40 last:border-0 odd:bg-secondary/20"
+                          className="border-b border-border/40 last:border-0 odd:bg-secondary/20 even:bg-background/40 hover:bg-secondary/60 transition-colors"
                         >
                           <td className="px-2 py-2 align-top text-[11px] text-muted-foreground sm:px-3 sm:text-xs">
                             {row.dateTime}
@@ -410,7 +410,7 @@ const Index = () => {
                           <td className="px-2 py-2 align-top text-[11px] text-muted-foreground sm:px-3 sm:text-sm">
                             {row.category || "Uncategorized"}
                           </td>
-                          <td className="whitespace-nowrap px-2 py-2 align-top text-right text-[11px] sm:px-3 sm:text-sm">
+                          <td className="whitespace-nowrap px-2 py-2 align-top text-right text-[11px] font-mono sm:px-3 sm:text-sm">
                             {formatCurrency(row.amount)}
                           </td>
                           <td className="px-2 py-2 align-top text-[11px] text-muted-foreground sm:px-3 sm:text-sm">
