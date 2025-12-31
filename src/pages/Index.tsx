@@ -22,6 +22,7 @@ interface CategoryStat {
   name: string;
   value: number; // total amount
   count: number; // number of transactions
+  percent?: number; // percentage of total expense
 }
 
 type HistoryFilter = "all" | "income" | "expense";
@@ -96,7 +97,7 @@ const Index = () => {
       }
     }
 
-    const categoryData: CategoryStat[] = Array.from(amountByCategory.entries()).map(
+    const categoryDataUnsorted: CategoryStat[] = Array.from(amountByCategory.entries()).map(
       ([name, value]) => ({
         name,
         value,
@@ -105,6 +106,13 @@ const Index = () => {
     );
 
     const balance = totalIncome - totalExpense;
+
+    const categoryData = categoryDataUnsorted
+      .map((cat) => ({
+        ...cat,
+        percent: totalExpense > 0 ? (cat.value / totalExpense) * 100 : 0,
+      }))
+      .sort((a, b) => b.value - a.value);
 
     return { totalIncome, totalExpense, balance, categoryData };
   }, [rows]);
@@ -286,17 +294,30 @@ const Index = () => {
                       {stats.categoryData.map((cat) => (
                         <div
                           key={cat.name}
-                          className="flex items-center justify-between rounded-md border border-border/70 bg-secondary/40 px-3 py-2 text-[11px] sm:text-xs"
+                          className="space-y-1 rounded-md border border-border/70 bg-secondary/40 px-3 py-2 text-[11px] sm:text-xs"
                         >
-                          <div className="flex flex-col">
-                            <span className="font-medium">{cat.name}</span>
-                            <span className="text-[10px] text-muted-foreground sm:text-[11px]">
-                              {cat.count} transaction{cat.count === 1 ? "" : "s"}
-                            </span>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{cat.name}</span>
+                              <span className="text-[10px] text-muted-foreground sm:text-[11px]">
+                                {cat.count} transaction{cat.count === 1 ? "" : "s"}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="block text-[11px] font-semibold sm:text-xs">
+                                {formatCurrency(cat.value)}
+                              </span>
+                              <span className="block text-[10px] text-muted-foreground sm:text-[11px]">
+                                {(cat.percent ?? 0).toFixed(0)}% of total
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[11px] font-semibold sm:text-xs">
-                            {formatCurrency(cat.value)}
-                          </span>
+                          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-background/40">
+                            <div
+                              className="h-full rounded-full bg-primary"
+                              style={{ width: `${Math.min(cat.percent ?? 0, 100)}%` }}
+                            />
+                          </div>
                         </div>
                       ))}
                     </div>
